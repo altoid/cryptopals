@@ -24,8 +24,6 @@ def to_base64(raw_val):
         raw_val_copy >>= 1
         width += 1
 
-    print(width)
-
     octets = (width + 7) // 8
 
     # how many octets in the last group?
@@ -34,23 +32,52 @@ def to_base64(raw_val):
 
     bits = raw_val.to_bytes(length=octets, byteorder='big')
 
-    pprint(bits)
+    # pprint(bits)
 
     # convert each group of 3 octets to 4 base64 digits
 
     mask = 2 ** 6 - 1
 
-    x = int.from_bytes(bits[0:3], byteorder='big')
+    result = []
+    for i in range(0, octets, 3):
+        x = int.from_bytes(bits[i:i+3], byteorder='big')
 
-    print(x)
+        c1 = base64_alphabet[(x >> 18) & mask]
+        c2 = base64_alphabet[(x >> 12) & mask]
+        c3 = base64_alphabet[(x >> 6) & mask]
+        c4 = base64_alphabet[x & mask]
 
-    c1 = base64_alphabet[(x >> 18) & mask]
-    c2 = base64_alphabet[(x >> 12) & mask]
-    c3 = base64_alphabet[(x >> 6) & mask]
-    c4 = base64_alphabet[x & mask]
+        result.append(c1)
+        result.append(c2)
+        result.append(c3)
+        result.append(c4)
 
-    print(c1 + c2 + c3 + c4)
-    return ''
+    if remaining_octets == 1:
+        x = int.from_bytes(bits[-1:], byteorder='big')
+        x <<= 4
+
+        c1 = base64_alphabet[(x >> 6) & mask]
+        c2 = base64_alphabet[x & mask]
+
+        result.append(c1)
+        result.append(c2)
+        result.append('=')
+        result.append('=')
+
+    elif remaining_octets == 2:
+        x = int.from_bytes(bits[-2:], byteorder='big')
+        x <<= 2
+
+        c1 = base64_alphabet[(x >> 12) & mask]
+        c2 = base64_alphabet[(x >> 6) & mask]
+        c3 = base64_alphabet[x & mask]
+
+        result.append(c1)
+        result.append(c2)
+        result.append(c3)
+        result.append('=')
+
+    return ''.join(result)
 
 
 if __name__ == '__main__':
@@ -62,4 +89,5 @@ class MyTest(unittest.TestCase):
         hex_val = int("0x49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d", 16)
         expecting = 'SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t'
 
-        to_base64(hex_val)
+        result = to_base64(hex_val)
+        self.assertEqual(expecting, result)
