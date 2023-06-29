@@ -142,11 +142,31 @@ def challenge_4():
     # decrypts to the name of a song.
 
 
+def repeating_key_xor(text, key):
+    result = []
+    for i in range(len(text)):
+        result.append(ord(text[i]) ^ ord(key[i % len(key)]))
+
+    x = int.from_bytes(result, byteorder='big')
+
+    s = f"{x:x}"
+    if len(s) & 1:
+        s = '0' + s
+    return s
+
+
 if __name__ == '__main__':
     challenge_4()
 
 
 class MyTest(unittest.TestCase):
+    def test_repeating_key_xor(self):
+        text = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
+        key = 'ICE'
+        expecting = '0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f'
+        result = repeating_key_xor(text, key)
+        self.assertEqual(expecting, result)
+
     def test_hex_2_base64(self):
         hex_val = int("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d", 16)
         expecting = 'SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t'
